@@ -1,0 +1,38 @@
+section .text
+        global _start
+
+_start:
+        mov ecx, len
+        mov ebx, even_numbers
+
+increase:
+        mov [temp], eax
+        push eax        ;push eax value
+
+        mov eax, 4
+        mov ebx, 1
+        mov ecx, temp
+        mov edx, 1
+        int 0x80
+
+        ;the following code add extra line
+        mov eax, 4
+        mov ebx, 1
+        mov ecx, space
+        mov edx, 1
+        int 0x80
+
+        pop eax        ;restore eax value
+        inc eax
+        cmp eax, 127        ;end number
+        jl increase
+
+        mov eax, 1
+        int 0x80
+
+segment .bss
+        temp resb 1
+
+section .data
+        even_numbers db 0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20
+        len equ $ - even_numbers
