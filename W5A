@@ -2,37 +2,32 @@ section .text
         global _start
 
 _start:
-        mov ecx, len
-        mov ebx, even_numbers
+        mov ecx, count
+        xor eax, eax 
+        lea ebx, [even_numbers]
 
-increase:
-        mov [temp], eax
-        push eax        ;push eax value
+generate_even_numbers:
+        add eax, 2               ; Move to the next even number (0, 2, 4, 6, 8)
+        mov [ebx], eax           ; Add the current even number (in EAX) to EBX
+        dec ecx
+        add ebx 1
+        loop generate_even_numbers  ; Loop until ECX is 0
 
-        mov eax, 4
-        mov ebx, 1
-        mov ecx, temp
-        mov edx, 1
-        int 0x80
+        lea esi, [even_numbers]    ; Load address of even_numbers array into ESI
+        mov ecx, count    
 
-        ;the following code add extra line
-        mov eax, 4
-        mov ebx, 1
-        mov ecx, space
-        mov edx, 1
-        int 0x80
+greater_loop:
+        mov edx, esi
+        cmp edx, esi
+        mov ecx, count
+        add esi, 1 
 
-        pop eax        ;restore eax value
-        inc eax
-        cmp eax, 127        ;end number
-        jl increase
+        loop greater_loop
 
-        mov eax, 1
-        int 0x80
 
 segment .bss
         temp resb 1
 
 section .data
-        even_numbers db 0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20
-        len equ $ - even_numbers
+        count db 5;
+        even_numbers times 5 db 0
