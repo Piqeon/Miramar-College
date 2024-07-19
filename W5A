@@ -1,40 +1,53 @@
 section .text
-        global _start
+    global _start
 
 _start:
-        mov ecx, count
-        xor eax, eax 
-        lea ebx, [even_numbers]
+    mov ecx, 5                ;Moves 5 into ecx for loop count (generate_even_numbers loop)
+    xor eax, eax              ;Initialize eax to 0
+    mov ebx, even_numbers     ;Move address of "even_numbers" array into ebx
 
 generate_even_numbers:
-        add eax, 2               ; Move to the next even number (0, 2, 4, 6, 8)
-        mov [ebx], eax           ; Add the current even number (in EAX) to EBX
-        dec ecx
-        add ebx 1
-        loop generate_even_numbers  ; Loop until ECX is 0
+    mov [ebx], eax            ;Move the current even number eax into ebx, the first loop will be 0
+    add eax, 2                ;Add 2 to eax for the next even number
+    add ebx, 4                ;Makes space for next integer (4 bytes)
+    loop generate_even_numbers ;Loop until ecx is 0
 
-        lea esi, [even_numbers]    ; Load address of even_numbers array into ESI
-        mov ecx, count    
-
+    ; Initialize for finding the largest number
+    mov esi, even_numbers     ;Moves address of "even_numbers" array into esi register
+    mov ecx, 5                ;Loop count for number of elements in array
+    xor eax, eax              ;Initialize eax to 0
+    xor ebx, ebx              ;Initialize ebx to 0
 
 find_largest:
-    mov bl, [esi]                ; Load the current number from the array into BL
-    cmp al, bl                   ; Compare AL (current max) with BL (current number)
-    jae skip                     ; If AL >= BL, skip the update
-    mov al, bl                   ; Otherwise, update AL with the new maximum
+    mov ebx, [esi]            ;Load the current number from even_numbers into ebx
+    cmp eax, ebx              ;Compare eax (largest) with EBX (current number), eax starts at 0
+    jae skip                  ;If eax >= ebx, jump to skip
+    mov eax, ebx              ;If ebx > eax, update eax with ebx (new largest)
 skip:
-    add esi, 1                   ; Move to the next number in the array
-    loop find_largest            ; Loop until ECX is 0
+    add esi, 4                ;Move to the next number in the array
+    loop find_largest         ;Loop until ecx is 0
 
-    ; Store the result
-    mov [result], al             ; Store the largest number in the result variable
+    mov [largest], eax        ;Store the largest number in the unitialized "largest" variable
+    jmp exit_program          ;Jump to exit_program 
 
-    mov	eax,1       ;system call number (sys_exit)
-    int	0x80 
+exit_program:                 
+    mov eax, 1                ;set eax register to sys_exit
+    int 0x80                  ;Invoke kernel to run sys_exit
 
-segment .bss
-        result resb 1
+section .bss
+    largest resd 1            ;Unitialized variable to store the largest number (4 bytes)
 
 section .data
-        count db 5;
-        even_numbers times 5 db 0
+    even_numbers times 5 dd 0 ;Initialize array "even_numbers" to store 5 even numbers (each 4 bytes)
+
+;Final value will be 8 for variable largest
+
+
+;./run.sh w5a
+;gdb w5a
+;layout asm
+;lay regs
+;break _start
+;watch (int) largest
+;run
+;step
