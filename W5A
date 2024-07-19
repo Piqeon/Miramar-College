@@ -16,17 +16,24 @@ generate_even_numbers:
         lea esi, [even_numbers]    ; Load address of even_numbers array into ESI
         mov ecx, count    
 
-greater_loop:
-        mov edx, esi
-        cmp edx, esi
-        mov ecx, count
-        add esi, 1 
 
-        loop greater_loop
+find_largest:
+    mov bl, [esi]                ; Load the current number from the array into BL
+    cmp al, bl                   ; Compare AL (current max) with BL (current number)
+    jae skip                     ; If AL >= BL, skip the update
+    mov al, bl                   ; Otherwise, update AL with the new maximum
+skip:
+    add esi, 1                   ; Move to the next number in the array
+    loop find_largest            ; Loop until ECX is 0
 
+    ; Store the result
+    mov [result], al             ; Store the largest number in the result variable
+
+    mov	eax,1       ;system call number (sys_exit)
+    int	0x80 
 
 segment .bss
-        temp resb 1
+        result resb 1
 
 section .data
         count db 5;
