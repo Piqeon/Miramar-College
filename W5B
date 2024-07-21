@@ -1,0 +1,63 @@
+section .text
+  global _start
+
+_start:
+  mov ebx, 10      ;Move 10 into ebx for the counter
+
+counter_loop:
+  inc eax            ;Increase eax by 1
+  dec ebx            ;Decrease ebx by 1
+  jnz counter_loop   ;Jump to 'counter_loop'
+  mov [counter] eax  ;Move eax into unitialized variable counter
+
+  mov dword [fibonacci_numbers], 1      ;Move 1 into the first element of array 'fibonacci_numbers'
+  mov dword [fibonacci_numbers + 4], 1  ;Move 1 into the second element
+
+
+  mov ecx, 8                  ;First two numbers are already inside the array, we need 8 more (8 more loops)
+  mov esi, fibonacci_numbers  ;Move fibonacci_numbers address' into esi
+  add esi, 8                  ;Start at the third element of the array.
+
+
+generate_fibonacci_numbers:
+    mov eax, [esi - 4]  ;load previous fibonacci into eax
+    mov edx, [esi - 8]  ;load second previous fibonacci into edx
+    add eax, edx        ;add eax and edx to get the next fibonacci
+    mov [esi], eax      ;store the result in the array
+    add esi, 4          ;move to the next position in the array
+    loop generate_fibonacci_numbers  ;Loop generate_fibonacci_numbers
+
+    mov eax, [fibonacci_numbers + 36]   ;Load the last element of the array into eax
+    mov [final], eax                    ;Move eax into intitialized variable 'final' for debugging
+
+array_setup:               ;Setup for the 3rd part of the activity 
+    mov esi, array         ;Move 'array's' address into esi, array is an itialiazed array with 4 elements
+    mov eax, [esi]         ;Move the first element of the array into eax
+    mov [largest_integer], eax   ;Move eax into 'largest_integer' variable
+
+    mov ecx, 3           ;Move 3 into ecx in order to loop 3 more times
+
+largest_array_element:   ;For finding the largest element in the array
+    add esi, 4           ;Move to the next element of the array
+    mov eax, [esi]       ;Move this next element into eax
+    cmp eax, [largest_integer]   ;Compare previous largest to eax.
+    jle array_loop               ;If eax is less than or equal to largest_integer jump to array_loop
+    mov [largest_integer], eax   ;If largest_integer is smaller than eax, update with eax
+
+array_loop: 
+  loop largest_array_element ;Loop/Return to start of largest_array_element, only called if eax is less than or equal to largest
+
+exit_program:  ;Exit program
+  mov eax,1
+  int 0x80
+
+section .data 
+    fibonacci_numbers times 10 dd 0    ;Inititalize and allocate space for fibonacci_numbers array. 
+    final dd 0                         Initialize variable final for part 2
+
+    array dd 4, 5, 2, 3   ;Initialize the array 'array' for third part
+    largest_integer dd 0  ;Intialize largest_integer variable for 3rd part
+
+
+section .bss
+  counter resb 1  ;Unitialized variable counter with allocated space
