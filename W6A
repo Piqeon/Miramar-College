@@ -2,37 +2,36 @@ section .text
   global _start
 
 _start:
-  mov esi, 65
-  mov ecx, 26
-  call alphabet_loop
+  mov esi, 65              ; Move A into esi
+  mov ecx, 26              ; Setup loop size for the alphabet
+  call alphabet_loop       ; Call on alphabet_loop
   call exit
 
-alphabet_loop:
-  mov [res], esi
-  push ecx
-  call output
-  mov byte [lineBreak], 10
-  call output_lineSpace
-  pop ecx
-  add esi, 1
-  loop alphabet_loop
+alphabet_loop:             ; Loop for displaying the letter, going to the next letter and adding a line break
+  mov [res], esi           ; Move current letter (A to start with) into result variable
+  push ecx                 ; Push ecx into stack for later
+  call output              ; Call on output 
+  mov byte [lineBreak], 10 ; Move 10 into unitialized lineBreak variable
+  call output_lineSpace    ; Call output_lineSpace
+  pop ecx                  ; Pull ecx back from the stack
+  add esi, 1               ; Add 1 to esi for next letter in alphabet
+  loop alphabet_loop       ; Subtract one from ecx and loop back to top of alphabet_loop
 
-output:
+output:                    ; Output prints the current letter
+  mov edx, 1               ; output length
+  mov ebx, 1               ; stdout
+  mov eax, 4               ; set the system call number to 4 (sys_write)
+  mov ecx, res             ; Moves result variable (current letter) into ecx for printing. This is why we pushed ecx onto the stack, originally the ecx variable was being overwritten here and the loop was breaking.
+  int 0x80                 ; call kernel
+  ret                      ; return from output
 
-  mov edx, 1       ;output length
-  mov ebx, 1       ;stdout
-  mov eax, 4       ;system call (sys_write)
-  mov ecx, res
-  int 0x80        ;interrupt kernel
-  ret
-
-output_lineSpace:    
-  mov edx, 1         ; Set the length of the output to 1 byte
-  mov ebx, 1         ; Set the file descriptor to 1 (stdout)
-  mov eax, 4         ; Set the system call number to 4 (sys_write)
-  mov ecx, lineBreak ; Move the address of newline to ECX
-  int 0x80           ; Trigger interrupt 0x80 to call the kernel
-  ret                ; Return from the procedure
+output_lineSpace:          ; Line space function
+  mov edx, 1               ; output length
+  mov ebx, 1               ; stdout
+  mov eax, 4               ; set the system call number to 4 (sys_write)
+  mov ecx, lineBreak       ; move the lineBreak variable into ecx to print (10 for linebreak), could be changed for any character between the letters
+  int 0x80                 ; call kernel
+  ret                      ; return from the output_lineSpace
 
 
 exit:
@@ -41,5 +40,5 @@ exit:
 
 
 segment .bss
-  lineBreak resb 1
-  res resb 1
+  lineBreak resb 1        ; Create unitialized variable lineBreak
+  res resb 1              ; Create unitialized variable res (result)
