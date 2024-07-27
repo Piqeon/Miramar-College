@@ -1,0 +1,51 @@
+section .data
+    odd_message db 'odd', 0xa                  ; variable to print 'odd'
+    even_message db 'even', 0xa                ; variable to print 'even
+    even_message_length equ $ - even_message    ; length of even message
+    odd_message_length equ $ - odd_message    ; length of odd message
+
+section .text
+    global _start:
+
+
+odd_even:
+    push ebp        ;push ebp onto stack, ebp points at stack now
+    mov ebp, esp    
+
+    mov edx, [ebp + 8]  ; moves first argument in the stack onto edx register
+    and edx, 1          ; Bitwise AND operator between edx and 1
+    jz even_num         ; If edx is zero jump to even_num 
+    jmp odd_num         ; If not jump to odd_num
+
+    leave               ; clears up the stack
+    ret                 ; returns to the caller
+
+
+even_num:                  ; even_num jumped to if edx was 0
+  mov eax, 4                    ; system call number for sys_write
+  mov ebx, 1                    ; file descriptor 1 (stdout)
+  mov ecx, even_message         ; moves the even_message into ecx
+  mov edx, even_message_length  ; gets the length of the even_message
+  int 0x80                      ; call the kernel
+  jmp exit
+
+odd_num:
+  mov eax, 4                    ; system call number for sys_write
+  mov ebx, 1                    ; file descriptor 1 (stdout)
+  mov ecx, odd_message          ; moves the even_message into ecx
+  mov edx, odd_message_length   ; gets the length of the even_message
+  int 0x80                      ; call the kernel
+  jmp exit
+
+
+_start:                         ; start function
+    mov eax, 4                  ; moves 4 into eax register
+    xor edx, edx                ; clears edx to 0
+    push eax                    ; push eax '4' on the stack
+    call odd_even               ; call the function odd_even
+    jmp exit                    ; Jump to exit once odd_even function returns
+
+
+exit:
+    mov eax, 1              ; System call number for sys_exit
+    int 0x80                ; Call the kernel
