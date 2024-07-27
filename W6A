@@ -1,0 +1,45 @@
+section .text
+  global _start
+
+_start:
+  mov esi, 65
+  mov ecx, 26
+  call alphabet_loop
+  call exit
+
+alphabet_loop:
+  mov [res], esi
+  push ecx
+  call output
+  mov byte [lineBreak], 10
+  call output_lineSpace
+  pop ecx
+  add esi, 1
+  loop alphabet_loop
+
+output:
+
+  mov edx, 1       ;output length
+  mov ebx, 1       ;stdout
+  mov eax, 4       ;system call (sys_write)
+  mov ecx, res
+  int 0x80        ;interrupt kernel
+  ret
+
+output_lineSpace:    
+  mov edx, 1         ; Set the length of the output to 1 byte
+  mov ebx, 1         ; Set the file descriptor to 1 (stdout)
+  mov eax, 4         ; Set the system call number to 4 (sys_write)
+  mov ecx, lineBreak ; Move the address of newline to ECX
+  int 0x80           ; Trigger interrupt 0x80 to call the kernel
+  ret                ; Return from the procedure
+
+
+exit:
+  mov eax, 1
+  int 0x80
+
+
+segment .bss
+  lineBreak resb 1
+  res resb 1
