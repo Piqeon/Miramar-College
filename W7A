@@ -1,46 +1,61 @@
 section .data
         filename db 'quotes.txt', 0h    ; the filename to create                                      ;Create filename to hold name of file
-        contents db 'To be, or not to be, that is the question.', 0ah                                 ;First two quotes to write to file
-                 db 'A fool thinks himself to be wise, buta wise man knows himself to be a fool', 0h
+        contents db 'To be, or not to be, that is the question.', 0Ah                                 ;First two quotes to write to file
+                 db 'A fool thinks himself to be wise, but a wise man knows himself to be a fool', 0Ah
 
-        appended db 'Better three hours too soon than a minute too late.', 0ah                        ;Second quotes to append to file
-                 db 'No legacy is so rich as honesty.' 0h
+        appended db 'Better three hours too soon than a minute too late.', 0Ah                        ;Second quotes to append to file
+                 db 'No legacy is so rich as honesty.', 0Ah
+
+        contents_length equ $-contents
+        appended_length equ $-appended
 
 section .bss
-    fd_out resb 4    
+    fd_out resb 4
 
 section .text
   global _start
 
 _start:
-    mov ecx, 0711
+    mov ecx, 0711o
     mov ebx, filename
-    mov eax, 5;
+    mov eax, 8;
     int 0x80
+
+    ; Check for error
+    test eax, eax
+    js error_result
 
     mov [fd_out], eax
 
     mov eax, 4
     mov ebx, [fd_out]
     mov ecx, contents
-    mov edx, 121
+    mov edx, contents_length
     int 0x80
 
-    mov eax, 19         ;Call sys_leak
-    mov ebx, [fd_out]   ;Move file descriptor into ebx
-    mov ecx, 121        ;Offset the start by 121 bytes
-    mov edx, 0          ;Set reference position for the offset value
-    int 0x80            ;Call kernel
+    mov eax, 19
+    mov ebx, [fd_out]
+    mov ecx, 0
+    mov edx, 2
+    int 0x80
 
-    mov eax, 6          ;Sys_close
-    mov ebx, [fd_out]   ;Move file descriptor into ebx
-    int 0x80            ;Call kernel
+    ; Check for error
+    test eax, eax
+    js error_result
+
+    mov eax, 6
+    mov ebx, [fd_out]
+    int 0x80
 
     mov eax, 1
     int 0x80
 
+error_result:
+    ; Exit with error status
+    mov eax, 1
+    mov ebx, 1
+    int 0x80
     
 
 
     
-
