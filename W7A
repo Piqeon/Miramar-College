@@ -1,57 +1,77 @@
 section .data
-        filename db 'quotes.txt', 0h    ; the filename to create                                      ;Create filename to hold name of file
-        contents db 'To be, or not to be, that is the question.', 0Ah                                 ;First two quotes to write to file
+        filename db 'quotes.txt', 0h    ; the filename to create                                              ;Create filename to hold name of file
+        contents db 'To be, or not to be, that is the question.', 0Ah                                         ;First two quotes to write to file
                  db 'A fool thinks himself to be wise, but a wise man knows himself to be a fool', 0Ah
+        contents_length equ $-contents                                                                        ;Length of contents variable
 
-        appended db 'Better three hours too soon than a minute too late.', 0Ah                        ;Second quotes to append to file
+        appended db 'Better three hours too soon than a minute too late.', 0Ah                                ;Second quotes to append to file
                  db 'No legacy is so rich as honesty.', 0Ah
-
-        contents_length equ $-contents
-        appended_length equ $-appended
+        appended_length equ $-appended                                                                        ;Length of appended variable
 
 section .bss
-    fd_out resb 4
+    fd_out resb 4        ;Unitialized variable fd_out to hold file descriptor
 
 section .text
   global _start
 
 _start:
-    mov ecx, 0711o
-    mov ebx, filename
-    mov eax, 8;
+    mov ecx, 0711o                ;Set file permissions 
+    mov ebx, filename             ;Set name of file from 'filename' variable
+    mov eax, 8;                   ;Create file
     int 0x80
 
-    ; Check for error
+    test eax, eax                ;Checks eax if negative  
+    js error_result              ;If negative jump to error_result handler
+
+
+    mov [fd_out], eax            ;Moves eax into file descriptor
+
+    mov eax, 4                   ;call sys_write
+    mov ebx, [fd_out]            ;Set file fd_out for file to write to
+    mov ecx, contents            ;Write contents into fd_out
+    mov edx, contents_length     ;Set 'contents' length for number of bytes to write
+    int 0x80
+
+    mov eax, 6                   ;sys_close 
+    mov ebx, [fd_out]            ;File descriptor
+    int 0x80
+
+    jmp append                   ;Jump to append function
+
+    mov eax, 1                   ;End program
+    int 0x80
+
+append:
+
+    mov eax, 5                  ;Sys_open call
+    mov ebx, filename           ;File name to open
+    mov ecx, 1                  ;Flag for write only
+    mov edx, 0777o              ;File permission
+    int 0x80
+
+    mov [fd_out],eax             ;Move eax into file_descriptor 
+
+    mov eax, 19                  ;sys_lseek
+    mov ebx, [fd_out]            ;Set file descriptor to fd_out
+    mov ecx, 0                   ;Set offset to end of file to start from
+    mov edx, 2                   ;Find end of file
+    int 0x80
+
+    ;Checks for error
     test eax, eax
     js error_result
 
-    mov [fd_out], eax
-
-    mov eax, 4
-    mov ebx, [fd_out]
-    mov ecx, contents
-    mov edx, contents_length
+    mov eax, 4                   ;call sys_write
+    mov ebx, [fd_out]            ;Set file fd_out for file to write to
+    mov ecx, appended            ;Write appended into fd_out
+    mov edx, appended_length     ;Set 'appended' length for number of bytes to write
     int 0x80
 
-    mov eax, 19
-    mov ebx, [fd_out]
-    mov ecx, 0
-    mov edx, 2
+    mov eax, 6                   ;sys_close 
+    mov ebx, [fd_out]            ;File descriptor
     int 0x80
 
-    ; Check for error
-    test eax, eax
-    js error_result
-
-    mov eax, 6
-    mov ebx, [fd_out]
-    int 0x80
-
-    mov eax, 1
-    int 0x80
-
-error_result:
-    ; Exit with error status
+error_result:                    ;If error_result is called exit the program
     mov eax, 1
     mov ebx, 1
     int 0x80
