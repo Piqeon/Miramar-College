@@ -1,0 +1,40 @@
+section .data  ;.data for creating variables x, y, and z
+  x dw 10
+  y dw 20
+  z dw 30
+
+section .bss    ;section for unitizalized result variable
+  result resd 1
+
+section .text
+  global _start
+
+_start:
+  mov bx, [x]    ;check if x is empty
+  test bx, bx
+  jz exit_program
+
+  mov bx, [y]   ;check if y is empty
+  test bx, bx
+  jz exit_program
+
+  mov bx, [z]   ;check if z is empty
+  test bx, bx
+  jz exit_program
+
+  call addition
+
+  mov eax, 1   ;sys_exit
+  int 0x80     ;system call
+
+exit_program:  ;exit program function 
+  mov eax, 1  ;sys_exit
+  int 0x80    ;system call
+
+addition:
+  mov ax, [x]  ;mov x into ax
+  add ax, [y]  ;add y to ax
+  add ax, [z]  ;add z to ax
+
+  mov [result], ax  ;mov ax into result variable
+  ret               ;return from addition function back to _start
