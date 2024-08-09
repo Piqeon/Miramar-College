@@ -1,0 +1,66 @@
+section .data
+  number db 20000  ;counter variable
+  appended db 00000, 0;
+  filename db 'counter_fun.txt', 0h
+
+section .bss
+    fd_out resb 4        ;Unitialized variable fd_out to hold file descriptor
+
+section .text
+  global _start
+
+_start:
+  mov ecx, 1
+  push ecx
+  mov [appended], ecx
+  mov ebx, [number]
+
+  mov ecx, 0711o                ;Set file permissions 
+  mov ebx, filename             ;Set name of file from 'filename' variable
+  mov eax, 8;                   ;Create file
+  int 0x80
+
+  test eax, eax                ;Checks eax if negative  
+  js error_result              ;If negative jump to error_result handler
+
+
+counter_loop:
+  cmp ecx, ebx
+  jg end_program
+  
+  mov eax, 5                  ;Sys_open call
+  mov ebx, filename           ;File name to open
+  mov ecx, 1                  ;Flag for write only
+  mov edx, 0777o              ;File permission
+  int 0x80
+
+  mov [fd_out],eax             ;Move eax into file_descriptor 
+
+  mov eax, 19                  ;sys_lseek
+  mov ebx, [fd_out]            ;Set file descriptor to fd_out
+  mov ecx, 0                   ;Set offset to end of file to start from
+  mov edx, 2                   ;Find end of file
+  int 0x80
+
+
+  mov eax, 4                   ;call sys_write
+  mov ebx, [fd_out]            ;Set file fd_out for file to write to
+  mov ecx, appended            ;Write appended into fd_out
+  int 0x80
+
+  mov eax, 6                   ;sys_close 
+  mov ebx, [fd_out]            ;File descriptor
+  int 0x80
+
+  pop ecx
+  inc ecx
+  jmp counter_loop
+
+error_result:                    ;If error_result is called exit the program
+    mov eax, 1
+    mov ebx, 1
+    int 0x80
+
+end_program:
+  mov eax, 1
+  int 0x80
