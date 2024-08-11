@@ -1,0 +1,153 @@
+section .data
+    plain_text db 'HELLO', 0      ;Message for encryption
+    key db 'world', 0             ;Encryption key
+    filename db 'output.txt', 0   ;Filename
+    newline db 10                 ;Variable for newline
+
+    plnTxt db 'Plain text: ', 0          ;Plain text formatting variable
+    keyTxt db 'Key: ', 0                 ;Key formatting variable
+    encrypted_text db 'Encryption: ', 0  ;Encryption formatting variable
+    decrypted_text db 'Decryption: ', 0  ;Decryption formatting variable
+
+section .bss                               
+    fd_out resb 4                        ;Unitialized variable for file descriptor
+    encrypted_message resb 32            ;Unitialized variable for encrypted message with extra space
+    decrypted_message resb 32            ;Unitialized variable for decrypted message with extra space
+    length_message resb 4                ;Message length for encrypted/decrypted messages
+
+section .text
+    global _start
+
+_start:
+    mov ecx, 0711o      ;Set permissions for file
+    mov ebx, filename   ;Set name for file using "filename" variable
+    mov eax, 8          ;sys_open
+    int 0x80        
+    mov [fd_out], eax   ;Move file to fd_out for future writing
+
+    call plainText      ;Call plainText function (formatting output file)
+    call keyText        ;Call keyText function   (formatting output file)
+
+    call encrypt_message ;Call encrypt_message function
+
+    mov eax, 4               ;sys_write
+    mov ebx, [fd_out]        ;File descriptor
+    mov ecx, encrypted_text  ;Move ecrypted_text into ecx for formatting
+    mov edx, 12              ;Set size of encrypted_text
+    int 0x80                 ;Kernel
+
+    mov eax, 4                 ;sys_write for encrypted message
+    mov ebx, [fd_out]          ;File descriptor
+    mov ecx, encrypted_message ;encrypted_message is string for writing
+    mov edx, [length_message]  ;Get size of string from length_message
+    int 0x80                   ;Kernel
+
+    mov eax, 4                 ;sys_write for newline
+    mov ebx, [fd_out]
+    mov ecx, newline
+    mov edx, 1
+    int 0x80
+
+    call decrypt_message       ;Call decrypt_message function
+
+    mov eax, 4                 ;sys_write for decrypted_text formatter 
+    mov ebx, [fd_out]
+    mov ecx, decrypted_text
+    mov edx, 12
+    int 0x80
+
+    mov eax, 4                 ;Write the actual decrypted message (should be HELLO)
+    mov ebx, [fd_out]
+    mov ecx, decrypted_message
+    mov edx, [length_message]
+    int 0x80
+
+    mov eax, 6                 ;Close the file
+    mov ebx, [fd_out]
+    int 0x80
+
+    mov eax, 1                 ;Exit the program
+    xor ebx, ebx
+    int 0x80
+
+encrypt_message:                  ;Encrypt message function
+    mov esi, plain_text           ;Move plain_text (original message) into esi
+    mov edi, encrypted_message    ;Move encrypted_message memory to edi.
+    mov ecx, 5                    ;Set size of plain_text message
+    mov ebx, key                  ;Move key into ebx
+
+encrypt_loop:                     ;encrypte_loop for XOR each byte in plain_text with key
+    mov al, [esi]                 ;Load first byte into al
+    xor al, [ebx]                 ;XOR key with plain_text
+    mov [edi], al                 ;Move new character into edi (encrypted_message)
+    inc esi                       ;Go to the next byte
+    inc ebx
+    inc edi
+    loop encrypt_loop             ;Loop back to top
+
+    mov byte [edi], 0             ;Calculate length of encrypted_message
+    sub edi, encrypted_message
+    mov [length_message], edi
+    ret                           ;Return to _start function
+
+decrypt_message:                  ;Decrypte message
+    mov esi, encrypted_message
+    mov edi, decrypted_message
+    mov ecx, 5
+    mov ebx, key
+
+decrypt_loop:                     ;Decrypt message loop for each byte by XOR the encrypted message with the key again
+    mov al, [esi]
+    xor al, [ebx]
+    mov [edi], al
+    inc esi
+    inc ebx
+    inc edi
+    loop decrypt_loop
+
+    mov byte [edi], 0            ;Get decrypted_message length
+    sub edi, decrypted_message
+    mov [length_message], edi
+    ret                          ;Return to _start function
+
+plainText:                       ;plainText function for writing in the "Plain Text: HELLO"
+    mov eax, 4                   ;sys_write for "PLain Text:" formatting
+    mov ebx, [fd_out]
+    mov ecx, plnTxt
+    mov edx, 12
+    int 0x80
+
+    mov eax, 4                  ;sys_write for actual plain_text variable (original message)
+    mov ebx, [fd_out]
+    mov ecx, plain_text
+    mov edx, 5
+    int 0x80
+
+    mov eax, 4                  ;sys_write for newline
+    mov ebx, [fd_out]
+    mov ecx, newline
+    mov edx, 1
+    int 0x80
+
+    ret                    ;Return back to start
+
+keyText:                   ;keyText function for writing "Key: world"
+    mov eax, 4             ;sys_write for "Key: " formatting
+    mov ebx, [fd_out]
+    mov ecx, keyTxt
+    mov edx, 5
+    int 0x80
+
+    mov eax, 4              ;sys_write for key variable
+    mov ebx, [fd_out]
+    mov ecx, key
+    mov edx, 5
+    int 0x80
+ 
+    mov eax, 4              ;sys_write for newline
+    mov ebx, [fd_out]
+    mov ecx, newline
+    mov edx, 1
+    int 0x80
+
+    ret                    ;Return back to _start
