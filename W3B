@@ -1,0 +1,37 @@
+section .text
+    global _start
+
+_start:
+    ; Task 1: Proof that XORing an operand with itself changes the operand to 0
+    mov eax, [var1]   ; Move var1 into eax
+    xor eax, eax      ; XOR eax with itself (eax should now be 0)
+
+    mov [result], eax ;Move eax into result
+
+    ; Task 2: Implementing a TEST instruction to check if a number is even or odd
+    mov eax, [var2]   ; Load var2 into eax
+    test eax, 1       ; Test the least significant bit
+    jnz odd_num       ; Jump if not zero (number is odd)
+
+    ; If zero (number is even)
+    mov eax, 'n'      ;Load 'n' into eax
+    mov [result],eax
+    jmp exit_program  ;Jump to exit_program 
+
+odd_num:
+    mov eax, 'y'   ; Load 'y' into eax
+    mov [result],eax
+    
+exit_program:
+    ; Exit the program
+    mov eax, 1        
+    xor ebx, ebx      
+    int 0x80          
+
+section .bss
+    result resb 1      ; Reserve 5 bytes for result
+    
+section .data
+    ; Initialized variables
+    var1 dd 2        ; Initialized variable var1 with value 2
+    var2 dd 12       ; Initialized variable var2 with value 11
