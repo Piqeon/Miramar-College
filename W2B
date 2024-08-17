@@ -1,0 +1,29 @@
+section .text
+	global _start
+
+_start:
+	mov eax,4
+	mov ecx,msg1
+	mov edx,len
+	int 0x80
+
+	mov eax,4
+	mov ecx,msg2
+	mov edx,len2
+	int 0x80
+
+	mov eax,4
+	mov ecx,msg3
+	mov edx,len3
+	int 0x80
+
+	mov eax,1
+	int 0x80
+	
+section .data
+	msg1 db 'I came,', 0xA 0xD
+	len equ $ - msg1
+	msg2 db 'I saw,', 0xA 0xD
+    len2 equ $ - msg2
+	msg3 db 'I conquered.', 0xA 0xD
+    len3 equ $ - msg3
