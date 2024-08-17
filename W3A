@@ -1,0 +1,67 @@
+section .text
+    global _start      ;declared for linker, the beginning of the code
+
+_start:                
+
+    
+    mov eax,[var1]     ;Move var1 into eax register
+    mov ebx,-1         ;Move "-1" into ebx register
+    imul ebx           ;Multiply eax by ebx in order to turn var1 negative
+    mov ebx,10         ;Move "10" into ebx
+    imul ebx           ;Multiply eax by new ebx value
+    mov [result], eax  ;Move eax into variable result, result should now be -10
+
+    ; Initialize result to 0 to reset the value
+    mov dword [result], 0
+    
+    mov eax,[var1]       ;Move var1 back into eax
+    mov ebx,[var2]       ;Move var2 into ebx
+    mov edx,[var3]       ;Move var3 into edx
+    mov ecx,[var4]       ;Move var4 inot ecx
+    add eax,ebx          ;Add ebx to eax
+    add eax,edx          ;Add edx to eax (now eax and ebx)
+    add eax,ecx          ;Add ecx to eax (eax, ebx and edx)
+    mov [result], eax    ;Move eax into result variable, the final answer should be 13
+    
+    ; Initialize result to 0
+    mov dword [result], 0
+    
+    mov eax,[var1]       ;Reset var1 into eax
+    mov ebx, -1          ;Move "-1" into ebx
+    imul ebx             ;Multiply eax by ebx in order to turn var1 negative
+    mov ebx,[var2]       ;Move var2 into ebx
+    imul ebx             ;Multiply eax by ebx (now var2)
+    mov edx,[var3]       ;Move var3 into edx
+    add eax,edx          ;Add edx to eax ((-var1 * var2) + edx)
+    mov [result], eax    ;Move eax into result variable, the result should be -2
+    
+    ; Initialize result to 0
+    mov dword [result], 0
+
+    ;First part: multiply var1 by 2
+    mov ax, [var1]       ;Move var1 into ax
+    mov bx, 2            ;Move "2" into bx
+    imul ax, bx          ;Multiply ax by bx (var1 * 2)
+    mov bx, ax           ;Store ax into bx
+
+    ; Second part: var2 + (-3)
+    mov bl, [var2]        ;Move var2 into 8 bit register bl
+    add bl, -3            ;Add "-3" to bl register
+    
+    mov ax, bx            ;Move the previously stored bx for part one into ax
+    idiv bl               ;Divide ax by 8 bit bl (ax = (var1 * 2) / (var2 + (-3))) this should be 1
+    
+    mov [result], ax      ;Move ax register into result
+    
+    mov eax,1             ;set eax register to sys_exit
+    int 0x80              ;Invoke kernel to run sys_exit
+
+
+section .data
+    var1 dd 1 ; var1 is assigned 1
+    var2 dd 5 ; var2 is assigned 5
+    var3 dd 3 ; var3 is assigned 3
+    var4 dd 4 ; var4 is assigned 4
+
+section .bss
+    result resw 1         ;Reserves storage space to uninitialized variable result
