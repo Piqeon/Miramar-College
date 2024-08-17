@@ -1,0 +1,20 @@
+section .text
+        global _start
+
+_start:
+	mov eax, [var1]
+	mov ebx, [var2]
+
+	add eax, ebx
+
+	add [result], eax       
+
+    mov eax,1	;set eax register to sys_exit
+    int 0x80	;Invoke kernel to run sys_exit
+
+section .bss
+    result resw 1
+
+section .data
+	var1 dd 10;
+	var2 dd 15;
